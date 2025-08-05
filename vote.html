@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Project Voting</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .project { margin-bottom: 8px; }
+    #submit { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h3>Select Exactly 4 Projects</h3>
+  <form id="voteForm">
+    <div class="project"><input type="checkbox" name="project" value="P1"> Project 1</div>
+    <div class="project"><input type="checkbox" name="project" value="P2"> Project 2</div>
+    <div class="project"><input type="checkbox" name="project" value="P3"> Project 3</div>
+    <div class="project"><input type="checkbox" name="project" value="P4"> Project 4</div>
+    <div class="project"><input type="checkbox" name="project" value="P5"> Project 5</div>
+    <div class="project"><input type="checkbox" name="project" value="P6"> Project 6</div>
+    <input type="hidden" id="responseID" name="responseID">
+    <button type="submit" id="submit">Submit Vote</button>
+    <p id="message"></p>
+  </form>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyTga4TvRcYp69_5JSdUwHo-oeq-jzNgunarPF6bwxk2yFQcrHj448WLDuloDKtSj2Syw/exec";
+    const form = document.getElementById("voteForm");
+    const message = document.getElementById("message");
+
+    // Get response ID from URL query param
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById("responseID").value = params.get("responseID") || "NO_RESPONSE_ID";
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const selected = Array.from(form.querySelectorAll('input[name="project"]:checked')).map(cb => cb.value);
+      const responseID = document.getElementById("responseID").value;
+
+      if (selected.length !== 4) {
+        message.textContent = "❗ Please select exactly 4 projects.";
+        return;
+      }
+
+      fetch(scriptURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          UserID: responseID,
+          Projects: selected
+        })
+      }).then(() => {
+        message.textContent = "✅ Your vote was submitted successfully!";
+        form.reset();
+      }).catch((error) => {
+        message.textContent = "❌ Error submitting vote.";
+        console.error(error);
+      });
+    });
+  </script>
+</body>
+</html>
