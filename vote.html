@@ -2,44 +2,71 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Project Voting</title>
+  <title>Vote for Projects</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .project { margin-bottom: 8px; }
-    #submit { margin-top: 15px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 { margin-bottom: 10px; }
+    .checkbox-container {
+      margin: 10px 0;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <h3>Select Exactly 4 Projects</h3>
+  <h2>Select Exactly 4 Projects:</h2>
   <form id="voteForm">
-    <div class="project"><input type="checkbox" name="project" value="P1"> Project 1</div>
-    <div class="project"><input type="checkbox" name="project" value="P2"> Project 2</div>
-    <div class="project"><input type="checkbox" name="project" value="P3"> Project 3</div>
-    <div class="project"><input type="checkbox" name="project" value="P4"> Project 4</div>
-    <div class="project"><input type="checkbox" name="project" value="P5"> Project 5</div>
-    <div class="project"><input type="checkbox" name="project" value="P6"> Project 6</div>
-    <input type="hidden" id="responseID" name="responseID">
-    <button type="submit" id="submit">Submit Vote</button>
-    <p id="message"></p>
+    <div class="checkbox-container">
+      <label><input type="checkbox" value="P1"> Project 1</label><br>
+      <label><input type="checkbox" value="P2"> Project 2</label><br>
+      <label><input type="checkbox" value="P3"> Project 3</label><br>
+      <label><input type="checkbox" value="P4"> Project 4</label><br>
+      <label><input type="checkbox" value="P5"> Project 5</label><br>
+      <label><input type="checkbox" value="P6"> Project 6</label><br>
+      <label><input type="checkbox" value="P7"> Project 7</label><br>
+      <label><input type="checkbox" value="P8"> Project 8</label><br>
+      <label><input type="checkbox" value="P9"> Project 9</label><br>
+      <label><input type="checkbox" value="P10"> Project 10</label>
+    </div>
+    <button type="submit">Submit Vote</button>
   </form>
+  <div class="message" id="message"></div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbyTga4TvRcYp69_5JSdUwHo-oeq-jzNgunarPF6bwxk2yFQcrHj448WLDuloDKtSj2Syw/exec";
     const form = document.getElementById("voteForm");
     const message = document.getElementById("message");
+    const scriptURL = "https://script.google.com/macros/s/PASTE_YOUR_DEPLOYMENT_URL_HERE/exec";
 
-    // Get response ID from URL query param
-    const params = new URLSearchParams(window.location.search);
-    document.getElementById("responseID").value = params.get("responseID") || "NO_RESPONSE_ID";
+    // Get response ID from URL query string
+    const urlParams = new URLSearchParams(window.location.search);
+    const responseID = urlParams.get("responseID");
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
 
-      const selected = Array.from(form.querySelectorAll('input[name="project"]:checked')).map(cb => cb.value);
-      const responseID = document.getElementById("responseID").value;
+      const selected = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
 
       if (selected.length !== 4) {
-        message.textContent = "❗ Please select exactly 4 projects.";
+        message.textContent = "❌ Please select exactly 4 projects.";
+        message.style.color = "red";
+        return;
+      }
+
+      if (!responseID) {
+        message.textContent = "❌ Missing response ID in the URL.";
+        message.style.color = "red";
         return;
       }
 
@@ -50,12 +77,20 @@
           UserID: responseID,
           Projects: selected
         })
-      }).then(() => {
-        message.textContent = "✅ Your vote was submitted successfully!";
-        form.reset();
-      }).catch((error) => {
-        message.textContent = "❌ Error submitting vote.";
-        console.error(error);
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "ok") {
+          message.textContent = "✅ Your vote was submitted successfully!";
+          message.style.color = "green";
+        } else {
+          throw new Error(data.message || "Unknown error");
+        }
+      })
+      .catch(error => {
+        message.textContent = "❌ Error submitting vote: " + error.message;
+        message.style.color = "red";
+        console.error("Submission error:", error);
       });
     });
   </script>
